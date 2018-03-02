@@ -2,7 +2,7 @@
 Create lists in Pardot that make use of your full Salesforce database
 
 Sample code 
-
+```
 from smart_pardot_list import SPList
 from pypardot.client import PardotAPI
 from simple_salesforce import Salesforce
