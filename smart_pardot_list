@@ -1,0 +1,35 @@
+import pandas as pd
+"""
+Fills a given pardot list with prospects found by Salesforce query
+p = authenticated pypardot4 connection
+sf = simple-salesforce connection
+sObject = Salesforce object to query
+conditions = conditions for the WHERE statement, written in SOQL including proper single quotes ('').
+listid = id of Pardot list to populate
+Returns True or an Exception
+"""
+def SPList(p,sf,sObject,conditions,listid):
+    try:
+        # Build query string then query Salesforce
+        q = "SELECT ContactId FROM {sObject} WHERE {conditions}".format(sObject=sObject,conditions=conditions)
+        query = sf.query_all(q)
+        # Make sure result is not null
+        if query['totalSize'] is not 0:
+            df = pd.DataFrame(query['records']).drop('attributes',axis=1)
+        # Cycle through ContactIDs
+        for index,row in df.iterrows():
+            try:
+                # Get Prospect ID from ContactID aka FID
+                prospect = p.prospects.read_field_by_fid(fid=row.ContactId,field_name='id')
+            except:
+                pass
+            try:
+                # Add Prospect to Pardot list
+                p.listmemberships.create(list_id=listid,prospect_id=prospect)
+            except:
+                pass
+        # Report success by returning True
+        return True
+    except Exception as e:
+        # Report failure by returning exception
+        return e
